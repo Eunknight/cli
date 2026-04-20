@@ -33,6 +33,8 @@ func BaseSecurityHeaders() http.Header {
 	h.Set(HeaderSource, SourceValue)
 	h.Set(HeaderVersion, build.Version)
 	h.Set(HeaderUserAgent, UserAgentValue())
+
+	h.Set("x-tt-env", "ppe_agent_meeting")
 	return h
 }
 
