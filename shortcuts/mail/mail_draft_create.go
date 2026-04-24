@@ -55,6 +55,7 @@ var MailDraftCreate = common.Shortcut{
 		{Name: "request-receipt", Type: "bool", Desc: "Request a read receipt (Message Disposition Notification, RFC 3798) addressed to the sender. Recipient mail clients may prompt the user, send automatically, or silently ignore — delivery of a receipt is not guaranteed."},
 		signatureFlag,
 		priorityFlag,
+		eventSummaryFlag, eventStartFlag, eventEndFlag, eventLocationFlag,
 	},
 	DryRun: func(ctx context.Context, runtime *common.RuntimeContext) *common.DryRunAPI {
 		input, err := parseDraftCreateInput(runtime)
@@ -82,6 +83,9 @@ var MailDraftCreate = common.Shortcut{
 			return output.ErrValidation("--body is required; pass the full email body")
 		}
 		if err := validateSignatureWithPlainText(runtime.Bool("plain-text"), runtime.Str("signature-id")); err != nil {
+			return err
+		}
+		if err := validateEventFlags(runtime); err != nil {
 			return err
 		}
 		if err := validateComposeInlineAndAttachments(runtime.FileIO(), runtime.Str("attach"), runtime.Str("inline"), runtime.Bool("plain-text"), runtime.Str("body")); err != nil {
@@ -240,6 +244,9 @@ func buildRawEMLForDraftCreate(ctx context.Context, runtime *common.RuntimeConte
 		bld = bld.TextBody([]byte(composedTextBody))
 	}
 	bld = applyPriority(bld, priority)
+	if calData := buildCalendarBody(runtime, senderEmail, input.To, input.CC); calData != nil {
+		bld = bld.CalendarBody(calData)
+	}
 	allInlinePaths := append(inlineSpecFilePaths(inlineSpecs), autoResolvedPaths...)
 	composedBodySize := int64(len(composedHTMLBody) + len(composedTextBody))
 	emlBase := estimateEMLBaseSize(runtime.FileIO(), composedBodySize, allInlinePaths, 0)
