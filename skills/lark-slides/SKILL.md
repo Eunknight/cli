@@ -14,10 +14,10 @@ metadata:
 
 **CRITICAL — 生成任何 XML 之前，MUST 先用 Read 工具读取 [xml-schema-quick-ref.md](references/xml-schema-quick-ref.md)，禁止凭记忆猜测 XML 结构。**
 
-**CRITICAL — 如果用户提到“模板”“套用模板”“参考某种主题/风格/版式”，或用户需求明显落在已有场景模板内（如工作汇报、产品介绍、商业计划书、培训、晋升汇报等），MUST 先用 [`scripts/template-tool.py`](scripts/template-tool.py) 的 `search` 做模板检索（无 Python 时才退回 [template-index.json](references/template-index.json)）；默认给出 2-3 个最匹配模板候选供用户选择。只有锁定模板/页型后，才读取 [template-catalog.md](references/template-catalog.md) 或裁切 `references/templates/*.xml` 片段；不要默认阅读全文模板 XML。**
+**CRITICAL — 如果用户提到“模板”“套用模板”“参考某种主题/风格/版式”，或用户需求明显落在已有场景模板内（如工作汇报、产品介绍、商业计划书、培训、晋升汇报等），MUST 先用 [`scripts/template-tool.py`](scripts/template-tool.py) 的 `search` 做模板检索；默认给出 2-3 个最匹配模板候选供用户选择。锁定模板后用 `summarize` 获取主题和布局摘要；只有需要布局骨架时才用 `extract` 裁切目标页型 XML。不要直接读取完整模板 XML。**
 
 > [!NOTE]
-> `scripts/template-tool.py` 需要 Python 3，但它是可选辅助路径，不是强制依赖。没有 Python 时，退回 “`template-index.json` → `template-catalog.md` → 按范围读取 XML 片段” 的纯文档路径。
+> `scripts/template-tool.py` 需要 Python 3。`references/template-index.json` 是脚本缓存/轻量路由索引，不是默认给 agent 阅读的文档；`assets/templates/*.xml` 是机器资源，只应通过脚本摘要或裁切，不要全文读取。
 
 **CRITICAL — 使用模板生成或改写页面时，MUST 先 `summarize` 目标页型；只有需要具体布局骨架时才 `extract`。生成本地 XML 后，如可运行 Python，MUST 先用 [`scripts/layout-lint.py`](scripts/layout-lint.py) 检查重叠/越界/文本高度风险，再创建或追加页面。**
 
@@ -76,7 +76,7 @@ lark-cli slides +create --title "演示文稿标题" --slides '[
 | 场景 | 文档 |
 |------|------|
 | 需要了解详细 XML 结构 | [xml-format-guide.md](references/xml-format-guide.md) |
-| 需要快速筛模板、做低成本路由 | [template-index.json](references/template-index.json) |
+| 需要快速筛模板、做低成本路由 | [`scripts/template-tool.py search`](scripts/template-tool.py) |
 | 需要匹配 PPT 模板/主题风格 | [template-catalog.md](references/template-catalog.md) |
 | 需要按页型抽摘要或裁切 XML 片段 | [`scripts/template-tool.py`](scripts/template-tool.py) |
 | 需要做本地布局风险检查 | [`scripts/layout-lint.py`](scripts/layout-lint.py) |
@@ -132,11 +132,11 @@ Step 1: 需求澄清 & 读取知识
   - 候选优先选场景强相关模板；只有没有明显场景模板时，才用 `light_general.xml` / `dark_general.xml` 这类通用模板兜底
   - 如果用户没有明确风格，根据主题推荐（见下方风格判断表）
   - 如果用户要求“模板/主题/风格参考”，或主题属于常见模板场景：
-    · 优先运行 `python3 skills/lark-slides/scripts/template-tool.py search --query "<用户需求原文>" --limit 3` 做低成本模板匹配；没有 Python 时才读 template-index.json
+    · 优先运行 `python3 skills/lark-slides/scripts/template-tool.py search --query "<用户需求原文>" --limit 3` 做低成本模板匹配
     · 需要人类可读说明时，再读 template-catalog.md 组织候选文案
-    · 锁定模板后，优先运行 `template-tool.py summarize` 看 `<theme>` / 页型摘要；需要具体布局时，再用 `template-tool.py extract` 或按 range 读取 XML 片段
+    · 锁定模板后，优先运行 `template-tool.py summarize` 看 `<theme>` / 页型摘要；需要具体布局时，再用 `template-tool.py extract`
     · 复用模板的 theme、配色、页面流、布局骨架，不要照搬占位文案
-    · 除非用户明确要求查看整份模板，否则不要默认读取 `references/templates/*.xml` 全文
+    · `references/template-index.json` 只是脚本缓存/轻量路由索引，`assets/templates/*.xml` 是机器资源；除非用户明确要求审计原始模板，否则不要直接读取
   - 读取 XML Schema 参考：
     · xml-schema-quick-ref.md — 元素和属性速查
     · xml-format-guide.md — 详细结构与示例
@@ -506,7 +506,7 @@ lark-cli slides <resource> <method> [flags] # 调用 API
 | [lark-slides-media-upload.md](references/lark-slides-media-upload.md) | **+media-upload Shortcut：上传本地图片，返回 `file_token`** |
 | [lark-slides-replace-slide.md](references/lark-slides-replace-slide.md) | **+replace-slide Shortcut：块级替换/插入，含合法根元素速查与 3350001 排错** |
 | [lark-slides-edit-workflows.md](references/lark-slides-edit-workflows.md) | 编辑已有页面的读-改-写流程与 action 决策树 |
-| [template-index.json](references/template-index.json) | **机器可读模板索引：优先用来做模板路由和候选筛选** |
+| [template-index.json](references/template-index.json) | **脚本缓存/轻量路由索引：由 `template-tool.py search` 使用，不是默认阅读入口** |
 | [template-catalog.md](references/template-catalog.md) | **按场景/色调匹配现成 PPT 模板，并定位到页型范围** |
 | [`scripts/template-tool.py`](scripts/template-tool.py) | **可选 Python 辅助脚本：`search` / `summarize` / `extract`，支持 `--layout-tag` 与 `extract --with-summary`** |
 | [`scripts/layout-lint.py`](scripts/layout-lint.py) | **本地布局检查脚本：检测重叠、越界、页脚碰撞、文本高度风险** |
