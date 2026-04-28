@@ -228,6 +228,7 @@ Shortcut 是对常用操作的高级封装（`lark-cli drive +<verb> [flags]`）
 | [`+upload`](references/lark-drive-upload.md) | Upload a local file to a Drive folder or wiki node |
 | [`+create-folder`](references/lark-drive-create-folder.md) | Create a Drive folder, optionally under a parent folder, with bot auto-grant support |
 | [`+download`](references/lark-drive-download.md) | Download a file from Drive to local |
+| [`+status`](references/lark-drive-status.md) | Compare a local file manifest (`--files-from`) with a Drive folder by SHA-256 content hash; reports `new_local` / `new_remote` / `modified` / `unchanged`. Pipe `find` / `git ls-files` / etc. into stdin so any filter you want is just a shell flag away. |
 | [`+create-shortcut`](references/lark-drive-create-shortcut.md) | Create a shortcut to an existing Drive file in another folder |
 | [`+add-comment`](references/lark-drive-add-comment.md) | Add a comment to doc/docx/sheet/slides, also supports wiki URL resolving to doc/docx/sheet/slides |
 | [`+export`](references/lark-drive-export.md) | Export a doc/docx/sheet/bitable to a local file with limited polling |
